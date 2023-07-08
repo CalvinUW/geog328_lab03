@@ -71,12 +71,12 @@
   </head>
 
   <body>
-    <button id="toggle-table">Toggle Table</button>
+    <!-- <button id="toggle-table">Toggle Table</button> -->
     <main id="container">
       <div id="table">
         <h2>Earthquake List</h2>
-        <button onclick="sortTable()">Sort by Magnitude</button>
-
+        <button onclick="sortTable(1)">Sort by County Name</button>
+        <button onclick="sortTable()">Sort by Date</button>
         <table>
           <tr>
             <th>id</th>
@@ -92,34 +92,34 @@
         "pk.eyJ1IjoiamFrb2J6aGFvIiwiYSI6ImNpcms2YWsyMzAwMmtmbG5icTFxZ3ZkdncifQ.P9MBej1xacybKcDN_jehvw";
       const map = new mapboxgl.Map({
         container: "map", // container ID
-        style: "mapbox://styles/mapbox/satellite-v9", // style URL
+        style: "mapbox://styles/mapbox/dark-v11", // style URL
         zoom: 5.5, // starting zoom
-        center: [138.043, 38], // starting center
-      });
+        center: [-121.8791907173204, 47.50267926269001], // starting center
+              });
 
       async function geojsonFetch() {
-        let response = await fetch("assets/earthquakes.geojson");
+        let response = await fetch("assets/wa_snails.geojson");
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        let earthquakes = await response.json();
+        let snails = await response.json();
 
-        response = await fetch("assets/japan.json");
+        response = await fetch("assets/wa_counties.json");
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        let japan = await response.json();
+        let washington = await response.json();
 
         var table = document.getElementsByTagName("table");
-        for (let i = 0; i < earthquakes.features.length; i++) {
+        for (let i = 0; i < snails.features.length; i++) {
           // console.log(earthquakes.features[i].properties.id);
 
-          var lng = await earthquakes.features[i].geometry.coordinates[0];
-          var lat = await earthquakes.features[i].geometry.coordinates[1];
+          var lng = await snails.features[i].geometry.coordinates[0];
+          var lat = await snails.features[i].geometry.coordinates[1];
 
           // Create an empty <tr> element and add it to the 1st position of the table:
           var row = table[0].insertRow(-1);
@@ -127,43 +127,43 @@
           var cell1 = row.insertCell(0);
           var cell2 = row.insertCell(1);
           var cell3 = row.insertCell(2);
-          cell1.innerHTML = await earthquakes.features[i].properties.id;
-          cell2.innerHTML = await earthquakes.features[i].properties.mag;
+          cell1.innerHTML = await snails.features[i].properties.SpecimenNumber;
+          cell2.innerHTML = await snails.features[i].properties.CountyName;
           cell3.innerHTML = await new Date(
-            earthquakes.features[i].properties.time
+            snails.features[i].properties.PublishDate
           ).toLocaleDateString("en-US");
         }
 
         map.on("load", () => {
-          map.addSource("earthquakes", {
+          map.addSource("snails", {
             type: "geojson",
-            data: earthquakes,
+            data: snails,
+          });
+
+          map.addSource("washington", {
+            type: "geojson",
+            data: washington,
           });
 
           map.addLayer({
-            id: "earthquakes-layer",
+            id: "washington-layer",
+            type: "fill",
+            source: "washington",
+            paint: {
+              "fill-color": "#31ad52", // blue color fill
+              "fill-opacity": 0.5,
+            },
+          });
+
+          map.addLayer({
+            id: "snail-layer",
             type: "circle",
-            source: "earthquakes",
+            source: "snails",
             paint: {
               "circle-radius": 8,
               "circle-stroke-width": 2,
               "circle-color": "red",
               "circle-stroke-color": "white",
-            },
-          });
-
-          map.addSource("japan", {
-            type: "geojson",
-            data: japan,
-          });
-
-          map.addLayer({
-            id: "japan-layer",
-            type: "fill",
-            source: "japan",
-            paint: {
-              "fill-color": "#0080ff", // blue color fill
-              "fill-opacity": 0.5,
             },
           });
         });
@@ -175,7 +175,7 @@
         );
       });
 
-      function sortTable() {
+      function sortTable(choice) {
         var table, rows, switching, i, x, y, shouldSwitch;
         table = document.getElementsByTagName("table")[0];
         switching = true;
@@ -190,17 +190,30 @@
           for (i = 1; i < rows.length - 1; i++) {
             //start by saying there should be no switching:
             shouldSwitch = false;
-            /*Get the two elements you want to compare,
-                    one from current row and one from the next:*/
-            x = parseFloat(rows[i].getElementsByTagName("td")[1].innerHTML);
-            y = parseFloat(rows[i + 1].getElementsByTagName("td")[1].innerHTML);
-            //check if the two rows should switch place:
-            if (x < y) {
-              //if so, mark as a switch and break the loop:
-              shouldSwitch = true;
-              break;
+
+            //check what variable to sort by (1 = county name, no input = date):
+            if (choice == 1) {
+              x = rows[i].getElementsByTagName("td")[1].innerHTML;
+              y = rows[i + 1].getElementsByTagName("td")[1].innerHTML;
+            } else {
+              x = new Date (rows[i].getElementsByTagName("td")[2].innerHTML);
+              y = new Date (rows[i + 1].getElementsByTagName("td")[2].innerHTML);
+            }
+
+            //check if the two rows should switch place depending on the variable used:
+            if (choice == 1) {
+              if (x > y){
+                shouldSwitch = true;
+                break;
+              }
+            } else {
+              if (x < y){
+                shouldSwitch = true;
+                break;
+              }
             }
           }
+
           if (shouldSwitch) {
             /*If a switch has been marked, make the switch
                     and mark that a switch has been done:*/
@@ -209,16 +222,16 @@
           }
         }
       }
-      const toggleButton = document.getElementById("toggle-table");
-        const table = document.getElementById("table");
+      // const toggleButton = document.getElementById("toggle-table");
+      //   const table = document.getElementById("table");
 
-        toggleButton.addEventListener("click", function() {
-            if (table.style.display === "none") {
-                table.style.display = "table";
-            } else {
-                table.style.display = "none";
-            }
-        });
+      //   toggleButton.addEventListener("click", function() {
+      //       if (table.style.display === "none") {
+      //           table.style.display = "table";
+      //       } else {
+      //           table.style.display = "none";
+      //       }
+      //   });
     </script>
   </body>
 </html>
