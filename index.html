@@ -16,6 +16,7 @@
       body {
         margin: 0;
         padding: 0;
+        font-family: Arial, Helvetica, sans-serif;
       }
 
       #container {
@@ -23,6 +24,7 @@
         height: 100vh;
         flex-direction: row-reverse;
         align-items: stretch;
+        background-color: #d4d4d4;
       }
 
       #table {
@@ -36,12 +38,36 @@
 
       button {
         margin-bottom: 10px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        display: inline-block;
+        border: none;
+        color: #d4d4d4;
+        padding: 16px 32px;
+        text-align: center;
+        text-decoration: none;
+        width: 50%;
       }
+
+      .sort_button {
+        background-color: rgb(235, 235, 235);
+        color: black;
+        border: 1px solid #b6b6b6;
+      }
+
+      .sort_button:hover {
+        background-color: #4caf50;
+        color: white;
+      }
+
       table {
         border-collapse: collapse;
         border-spacing: 0;
         width: 100%;
         border: 1px solid #ddd;
+        background-color: #fffefe;
       }
 
       th,
@@ -51,8 +77,9 @@
       }
 
       tr:nth-child(even) {
-        background-color: #f2f2f2;
+        background-color: #dddddd;
       }
+
       @media (max-width: 1024px) {
         #container {
           flex-direction: column-reverse;
@@ -67,21 +94,37 @@
       #toggle-table:focus + #table {
         display: table;
       }
+
+      h2 {
+        font-size: 26px;
+        text-align: center;
+      }
+
+      h3 {
+        font-size: 20px;
+        margin-top: -10px;
+        text-align: center;
+      }
     </style>
   </head>
 
   <body>
-    <!-- <button id="toggle-table">Toggle Table</button> -->
     <main id="container">
       <div id="table">
-        <h2>Earthquake List</h2>
-        <button onclick="sortTable(1)">Sort by County Name</button>
-        <button onclick="sortTable()">Sort by Date</button>
+        <h2>Invasive New Zealand Mud Snail Locations</h2>
+        <h3>(In Washington State)</h3>
+        <div>
+          <button class="sort_button" onclick="sortTable(1)">
+            Sort by County Name</button
+          ><button class="sort_button" onclick="sortTable()">
+            Sort by Date
+          </button>
+        </div>
         <table>
           <tr>
-            <th>id</th>
-            <th>magnitude</th>
-            <th>timestamp</th>
+            <th>Specimen Number</th>
+            <th>County</th>
+            <th>Date Observed</th>
           </tr>
         </table>
       </div>
@@ -92,10 +135,10 @@
         "pk.eyJ1IjoiamFrb2J6aGFvIiwiYSI6ImNpcms2YWsyMzAwMmtmbG5icTFxZ3ZkdncifQ.P9MBej1xacybKcDN_jehvw";
       const map = new mapboxgl.Map({
         container: "map", // container ID
-        style: "mapbox://styles/mapbox/dark-v11", // style URL
-        zoom: 5.5, // starting zoom
-        center: [-121.8791907173204, 47.50267926269001], // starting center
-              });
+        style: "mapbox://styles/mapbox/light-v11", // style URL
+        zoom: 6.8, // starting zoom
+        center: [-120.8791907173204, 47.50267926269001], // starting center
+      });
 
       async function geojsonFetch() {
         let response = await fetch("assets/wa_snails.geojson");
@@ -135,11 +178,6 @@
         }
 
         map.on("load", () => {
-          map.addSource("snails", {
-            type: "geojson",
-            data: snails,
-          });
-
           map.addSource("washington", {
             type: "geojson",
             data: washington,
@@ -150,20 +188,33 @@
             type: "fill",
             source: "washington",
             paint: {
-              "fill-color": "#31ad52", // blue color fill
+              "fill-color": "#aae87d", // green color fill
               "fill-opacity": 0.5,
+              "fill-outline-color": "#000000",
             },
+          });
+
+          map.loadImage("img/snail-icon.png", (error, image) => {
+            if (error) throw error;
+            map.addImage("snail", image);
+          });
+
+          map.addSource("snails", {
+            type: "geojson",
+            data: snails,
           });
 
           map.addLayer({
             id: "snail-layer",
-            type: "circle",
+            type: "symbol",
+            layout: {
+              "icon-image": "snail",
+              "icon-size": 0.05,
+              "icon-allow-overlap": true,
+            },
             source: "snails",
             paint: {
-              "circle-radius": 8,
-              "circle-stroke-width": 2,
-              "circle-color": "red",
-              "circle-stroke-color": "white",
+              "icon-color": "#0080ff",
             },
           });
         });
@@ -196,18 +247,18 @@
               x = rows[i].getElementsByTagName("td")[1].innerHTML;
               y = rows[i + 1].getElementsByTagName("td")[1].innerHTML;
             } else {
-              x = new Date (rows[i].getElementsByTagName("td")[2].innerHTML);
-              y = new Date (rows[i + 1].getElementsByTagName("td")[2].innerHTML);
+              x = new Date(rows[i].getElementsByTagName("td")[2].innerHTML);
+              y = new Date(rows[i + 1].getElementsByTagName("td")[2].innerHTML);
             }
 
             //check if the two rows should switch place depending on the variable used:
             if (choice == 1) {
-              if (x > y){
+              if (x > y) {
                 shouldSwitch = true;
                 break;
               }
             } else {
-              if (x < y){
+              if (x < y) {
                 shouldSwitch = true;
                 break;
               }
@@ -222,16 +273,6 @@
           }
         }
       }
-      // const toggleButton = document.getElementById("toggle-table");
-      //   const table = document.getElementById("table");
-
-      //   toggleButton.addEventListener("click", function() {
-      //       if (table.style.display === "none") {
-      //           table.style.display = "table";
-      //       } else {
-      //           table.style.display = "none";
-      //       }
-      //   });
     </script>
   </body>
 </html>
