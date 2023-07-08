@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Load data from an external GeoJSON file</title>
+    <title>Washington State New Zealand Mud Snail Locations</title>
     <meta
       name="viewport"
       content="initial-scale=1,maximum-scale=1,user-scalable=no"
@@ -89,6 +89,7 @@
           display: none;
         }
       }
+
       /* Show the table when the hover button is clicked */
       #toggle-table:hover + #table,
       #toggle-table:focus + #table {
@@ -159,8 +160,6 @@
 
         var table = document.getElementsByTagName("table");
         for (let i = 0; i < snails.features.length; i++) {
-          // console.log(earthquakes.features[i].properties.id);
-
           var lng = await snails.features[i].geometry.coordinates[0];
           var lat = await snails.features[i].geometry.coordinates[1];
 
@@ -194,6 +193,7 @@
             },
           });
 
+          //load the snail icon
           map.loadImage("img/snail-icon.png", (error, image) => {
             if (error) throw error;
             map.addImage("snail", image);
@@ -208,14 +208,12 @@
             id: "snail-layer",
             type: "symbol",
             layout: {
+              //use snail icon for each point
               "icon-image": "snail",
               "icon-size": 0.05,
               "icon-allow-overlap": true,
             },
             source: "snails",
-            paint: {
-              "icon-color": "#0080ff",
-            },
           });
         });
       }
@@ -242,7 +240,7 @@
             //start by saying there should be no switching:
             shouldSwitch = false;
 
-            //check what variable to sort by (1 = county name, no input = date):
+            //check what variable to sort by (1 = county, 2 = date):
             if (choice == 1) {
               x = rows[i].getElementsByTagName("td")[1].innerHTML;
               y = rows[i + 1].getElementsByTagName("td")[1].innerHTML;
